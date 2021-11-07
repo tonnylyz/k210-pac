@@ -18,7 +18,7 @@
 #![allow(non_snake_case)]
 #![no_std]
 
-const KOFFSET: usize = 0xffff_ffff_0000_0000;
+const KOFFSET: usize = 0x8_0000_0000;
 extern crate bare_metal;
 extern crate vcell;
 use core::marker::PhantomData;
