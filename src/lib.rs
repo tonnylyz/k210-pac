@@ -17,10 +17,9 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![no_std]
+
+const KOFFSET: usize = 0xffff_ffff_0000_0000;
 extern crate bare_metal;
-extern crate riscv;
-#[cfg(feature = "rt")]
-extern crate riscv_rt;
 extern crate vcell;
 use core::marker::PhantomData;
 use core::ops::Deref;
@@ -242,49 +241,6 @@ pub mod interrupt {
             }
         }
     }
-    #[cfg(feature = "rt")]
-    #[macro_export]
-    #[doc = r" Assigns a handler to an interrupt"]
-    #[doc = r""]
-    #[doc = r" This macro takes two arguments: the name of an interrupt and the path to the"]
-    #[doc = r" function that will be used as the handler of that interrupt. That function"]
-    #[doc = r" must have signature `fn()`."]
-    #[doc = r""]
-    #[doc = r" Optionally, a third argument may be used to declare interrupt local data."]
-    #[doc = r" The handler will have exclusive access to these *local* variables on each"]
-    #[doc = r" invocation. If the third argument is used then the signature of the handler"]
-    #[doc = r" function must be `fn(&mut $NAME::Locals)` where `$NAME` is the first argument"]
-    #[doc = r" passed to the macro."]
-    #[doc = r""]
-    #[doc = r" # Example"]
-    #[doc = r""]
-    #[doc = r" ``` ignore"]
-    #[doc = r" interrupt!(TIM2, periodic);"]
-    #[doc = r""]
-    #[doc = r" fn periodic() {"]
-    #[doc = r#"     print!(".");"#]
-    #[doc = r" }"]
-    #[doc = r""]
-    #[doc = r" interrupt!(TIM3, tick, locals: {"]
-    #[doc = r"     tick: bool = false;"]
-    #[doc = r" });"]
-    #[doc = r""]
-    #[doc = r" fn tick(locals: &mut TIM3::Locals) {"]
-    #[doc = r"     locals.tick = !locals.tick;"]
-    #[doc = r""]
-    #[doc = r"     if locals.tick {"]
-    #[doc = r#"         println!("Tick");"#]
-    #[doc = r"     } else {"]
-    #[doc = r#"         println!("Tock");"#]
-    #[doc = r"     }"]
-    #[doc = r" }"]
-    #[doc = r" ```"]
-    macro_rules ! interrupt { ( $ NAME : ident , $ path : path , locals : { $ ( $ lvar : ident : $ lty : ty = $ lval : expr ; ) * } ) => { # [ allow ( non_snake_case ) ]
-mod $ NAME { pub struct Locals { $ ( pub $ lvar : $ lty , ) * } } # [ allow ( non_snake_case ) ]
-# [ no_mangle ]
-pub extern "C" fn $ NAME ( ) { let _ = $ crate :: interrupt :: Interrupt :: $ NAME ; static mut LOCALS : self :: $ NAME :: Locals = self :: $ NAME :: Locals { $ ( $ lvar : $ lval , ) * } ; let f : fn ( & mut self :: $ NAME :: Locals ) = $ path ; f ( unsafe { & mut LOCALS } ) ; } } ; ( $ NAME : ident , $ path : path ) => { # [ allow ( non_snake_case ) ]
-# [ no_mangle ]
-pub extern "C" fn $ NAME ( ) { let _ = $ crate :: interrupt :: Interrupt :: $ NAME ; let f : fn ( ) = $ path ; f ( ) ; } } }
 }
 pub use self::interrupt::Interrupt;
 #[allow(unused_imports)]
@@ -542,7 +498,7 @@ impl CLINT {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const clint::RegisterBlock {
-        0x0200_0000 as *const _
+      (0x0200_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for CLINT {
@@ -656,7 +612,7 @@ impl PLIC {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const plic::RegisterBlock {
-        0x0c00_0000 as *const _
+      (0x0c00_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for PLIC {
@@ -1033,7 +989,7 @@ impl UARTHS {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const uarths::RegisterBlock {
-        0x3800_0000 as *const _
+      (0x3800_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for UARTHS {
@@ -1695,7 +1651,7 @@ impl GPIOHS {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const gpiohs::RegisterBlock {
-        0x3800_1000 as *const _
+      (0x3800_1000 + KOFFSET) as *const _
     }
 }
 impl Deref for GPIOHS {
@@ -9405,7 +9361,7 @@ impl KPU {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const kpu::RegisterBlock {
-        0x4080_0000 as *const _
+      (0x4080_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for KPU {
@@ -10357,7 +10313,7 @@ impl FFT {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const fft::RegisterBlock {
-        0x4200_0000 as *const _
+      (0x4200_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for FFT {
@@ -11344,7 +11300,7 @@ impl DMAC {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const dmac::RegisterBlock {
-        0x5000_0000 as *const _
+      (0x5000_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for DMAC {
@@ -17870,7 +17826,7 @@ impl GPIO {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const gpio::RegisterBlock {
-        0x5020_0000 as *const _
+      (0x5020_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for GPIO {
@@ -18723,7 +18679,7 @@ impl UART1 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const uart1::RegisterBlock {
-        0x5021_0000 as *const _
+      (0x5021_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for UART1 {
@@ -19816,7 +19772,7 @@ impl UART2 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const uart1::RegisterBlock {
-        0x5022_0000 as *const _
+      (0x5022_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for UART2 {
@@ -19835,7 +19791,7 @@ impl UART3 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const uart1::RegisterBlock {
-        0x5023_0000 as *const _
+      (0x5023_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for UART3 {
@@ -19854,7 +19810,7 @@ impl SPI0 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const spi0::RegisterBlock {
-        0x5200_0000 as *const _
+      (0x5200_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for SPI0 {
@@ -21359,7 +21315,7 @@ impl SPI1 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const spi0::RegisterBlock {
-        0x5300_0000 as *const _
+      (0x5300_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for SPI1 {
@@ -21378,7 +21334,7 @@ impl SPI2 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const spi2::RegisterBlock {
-        0x5024_0000 as *const _
+      (0x5024_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for SPI2 {
@@ -21432,7 +21388,7 @@ impl SPI3 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const spi3::RegisterBlock {
-        0x5400_0000 as *const _
+      (0x5400_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for SPI3 {
@@ -22937,7 +22893,7 @@ impl I2S0 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const i2s0::RegisterBlock {
-        0x5025_0000 as *const _
+      (0x5025_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for I2S0 {
@@ -25460,7 +25416,7 @@ impl APU {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const apu::RegisterBlock {
-        0x5025_0200 as *const _
+      (0x5025_0200 + KOFFSET) as *const _
     }
 }
 impl Deref for APU {
@@ -27025,7 +26981,7 @@ impl I2S1 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const i2s0::RegisterBlock {
-        0x5026_0000 as *const _
+      (0x5026_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for I2S1 {
@@ -27044,7 +27000,7 @@ impl I2S2 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const i2s0::RegisterBlock {
-        0x5027_0000 as *const _
+      (0x5027_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for I2S2 {
@@ -27063,7 +27019,7 @@ impl I2C0 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const i2c0::RegisterBlock {
-        0x5028_0000 as *const _
+      (0x5028_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for I2C0 {
@@ -30785,7 +30741,7 @@ impl I2C1 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const i2c0::RegisterBlock {
-        0x5029_0000 as *const _
+      (0x5029_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for I2C1 {
@@ -30804,7 +30760,7 @@ impl I2C2 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const i2c0::RegisterBlock {
-        0x502a_0000 as *const _
+      (0x502a_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for I2C2 {
@@ -30823,7 +30779,7 @@ impl FPIOA {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const fpioa::RegisterBlock {
-        0x502b_0000 as *const _
+      (0x502b_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for FPIOA {
@@ -31394,7 +31350,7 @@ impl SHA256 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const sha256::RegisterBlock {
-        0x502c_0000 as *const _
+      (0x502c_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for SHA256 {
@@ -31838,7 +31794,7 @@ impl TIMER0 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const timer0::RegisterBlock {
-        0x502d_0000 as *const _
+      (0x502d_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for TIMER0 {
@@ -32344,7 +32300,7 @@ impl TIMER1 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const timer0::RegisterBlock {
-        0x502e_0000 as *const _
+      (0x502e_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for TIMER1 {
@@ -32363,7 +32319,7 @@ impl TIMER2 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const timer0::RegisterBlock {
-        0x502f_0000 as *const _
+      (0x502f_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for TIMER2 {
@@ -32382,7 +32338,7 @@ impl WDT0 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const wdt0::RegisterBlock {
-        0x5040_0000 as *const _
+      (0x5040_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for WDT0 {
@@ -33593,7 +33549,7 @@ impl WDT1 {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const wdt0::RegisterBlock {
-        0x5041_0000 as *const _
+      (0x5041_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for WDT1 {
@@ -33612,7 +33568,7 @@ impl OTP {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const otp::RegisterBlock {
-        0x5042_0000 as *const _
+      (0x5042_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for OTP {
@@ -33666,7 +33622,7 @@ impl DVP {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const dvp::RegisterBlock {
-        0x5043_0000 as *const _
+      (0x5043_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for DVP {
@@ -35067,7 +35023,7 @@ impl SYSCTL {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const sysctl::RegisterBlock {
-        0x5044_0000 as *const _
+      (0x5044_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for SYSCTL {
@@ -43175,7 +43131,7 @@ impl AES {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const aes::RegisterBlock {
-        0x5045_0000 as *const _
+      (0x5045_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for AES {
@@ -44838,7 +44794,7 @@ impl RTC {
     #[doc = r"Returns a pointer to the register block"]
     #[inline(always)]
     pub const fn ptr() -> *const rtc::RegisterBlock {
-        0x5046_0000 as *const _
+      (0x5046_0000 + KOFFSET) as *const _
     }
 }
 impl Deref for RTC {
@@ -46009,13 +45965,7 @@ impl Peripherals {
     #[doc = r"Returns all the peripherals *once*"]
     #[inline]
     pub fn take() -> Option<Self> {
-        riscv::interrupt::free(|_| {
-            if unsafe { DEVICE_PERIPHERALS } {
-                None
-            } else {
-                Some(unsafe { Peripherals::steal() })
-            }
-        })
+      Some(unsafe { Peripherals::steal() })
     }
     #[doc = r"Unchecked version of `Peripherals::take`"]
     #[inline]
